@@ -3,6 +3,7 @@
 	#include "HWC1.h"
 	#include <unistd.h>
 
+	/* Test of the put_non_bloccante method*/
 	void not_blocking_put_test() {
 		buffer_t* buffer = buffer_init(1);
 		const char* string= "Hi";
@@ -24,53 +25,87 @@
 
 	}
 
+	/* Test of the get_non_bloccante method*/
 	void not_blocking_get_test() {
+		// creation of the buffer
 		buffer_t* buffer = buffer_init(1);
+		// creation of a string and the message containing that string
 		const char* string= "Hi";
 		msg_t *msg = msg_init_string((void*)string);
+		//filling the buffer with the message
 		buffer->messages[buffer->i_index] = msg;
+		// increasing the occupied index of the buffer
 		buffer->occupied +=1;
+		// retrieving the message from the buffer
 		msg_t* test = get_non_bloccante(buffer);
-		CU_ASSERT_EQUAL(test,msg);
+		// chechking if the string taken from the buffer is the
+		// same that was put for the test
+		CU_ASSERT_STRING_EQUAL(test->content,msg->content);
+		// checking if the index was updated during the get call
 		CU_ASSERT_TRUE(buffer->occupied==0);
+		//checking if the buffer is now empty
 		CU_ASSERT_EQUAL(buffer->messages[0],NULL);
+		//freeing the memory used for the test
 		free(test);
 		free(buffer);
 	}
 
+	// helping function for testing a single call of
+	// the function get_non_bloccante
 	void* single_blocking_get_call(void* arg) {
+		//casting the parameter passed as a void pointer
 		buffer_t **buffer = (buffer_t**)arg;
 		buffer_t* b = *buffer;
+		//calling the function to test
 		msg_t* msg = get_bloccante(b);
-		printf("Thread unlocked\n");
+		// print a message after the thread being unlocked
+		printf("\nThread unlocked\n");
+		// check if the message retrieved is the same put in the buffer
 		CU_ASSERT_STRING_EQUAL(msg->content,"Hi");
 		pthread_exit(0);
 	}
 
+	// test of get_bloccante function
 	void blocking_get_test() {
+		// initialize the buffer
 		buffer_t* buffer = buffer_init(1);
+		// thread for the consumer
 		pthread_t consumer;
+		// creation of the thread of the consumer
+		// this thread will run the function single_blocking_get_call
 		if (pthread_create(&consumer,NULL,&single_blocking_get_call,&buffer)) {
 			printf("error creating consumer thread."); abort();
 		}
+		// put the main thread in a pause to test if the consumer thread
+		// is really blocked --> the buffer is empty
 		sleep(7);
+		//creating the message to put in the buffer
 		const char* string= "Hi";
 		msg_t *msg = msg_init_string((void*)string);
 		put_non_bloccante(buffer,msg);
+		//wait for the consumer thread
 		if (pthread_join(consumer,NULL)) {
 			printf("error joining consumer thread."); abort();
 		}
+		//check if the buffer was emptied by the consumer thread
 		CU_ASSERT_TRUE(buffer->occupied==0);
 	}
-
+	// function called for the test of the put_bloccante method
 	void* single_blocking_put_call(void* arg) {
+		//casting the parameter passed as a void pointer
 		buffer_t **buffer = (buffer_t**)arg;
 		buffer_t* b = *buffer;
+		// creating the message to put into the buffer
 		const char* string= "Hi";
 		msg_t *msg = msg_init_string((void*)string);
+		//calling the put_bloccante method, the buffer is full so
+		// the producer will stay blocked
 		msg_t* test = put_bloccante(b,msg);
-		printf("Thread unlocked\n");
+		//print a message when the thread is unlocked
+		printf("\nThread unlocked\n");
+		//check if the method put the message in the buffer correctly
 		CU_ASSERT_STRING_EQUAL(test->content,msg->content);
+		// end this thread
 		pthread_exit(0);
 	}
 
@@ -101,7 +136,7 @@
 		int i = 0;
 		pthread_t thread_id;
 		thread_id = pthread_self();
-		printf("Thread Producer %d\n",(int)thread_id);
+		printf("\nThread Producer %d\n",(int)thread_id);
 		const char* string = "Hi";
 		buffer_t **buffer = (buffer_t**)arg;
 		buffer_t* b = *buffer;
@@ -120,7 +155,7 @@
 		int i = 1;
 		pthread_t thread_id;
 		thread_id = pthread_self();
-		printf("Thread Producer %d\n",(int)thread_id);
+		printf("\nThread Producer %d\n",(int)thread_id);
 		const char* string = "Hi";
 		buffer_t **buffer = (buffer_t**)arg;
 		buffer_t* b = *buffer;
