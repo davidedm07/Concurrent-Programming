@@ -96,7 +96,7 @@
 		buffer_t **buffer = (buffer_t**)arg;
 		buffer_t* b = *buffer;
 		// creating the message to put into the buffer
-		const char* string= "Hi";
+		const char* string= "How are you?";
 		msg_t *msg = msg_init_string((void*)string);
 		//calling the put_bloccante method, the buffer is full so
 		// the producer will stay blocked
@@ -109,102 +109,137 @@
 		pthread_exit(0);
 	}
 
+	
 	void blocking_put_test() {
+		// creating the buffer
 		buffer_t* buffer = buffer_init(1);
 		const char* string= "Hi";
+		//creating the message to put in the buffer in order to fill it
 		msg_t *msg = msg_init_string((void*)string);
 		pthread_t producer;
 		// filling the buffer
 		put_non_bloccante(buffer,msg);
+		// checking if the buffer is full 
 		CU_ASSERT_TRUE(buffer->occupied==1);
+		// creating the thread producer
 		if (pthread_create(&producer,NULL,&single_blocking_put_call,&buffer)) {
 			printf("error creating consumer thread."); abort();
 		}
+		// stopping the main thread in order to make the producer thread block
 		sleep(7);
 		// emptying the buffer
 		get_non_bloccante(buffer);
+		// testing if the buffer is empty now
 		CU_ASSERT_TRUE(buffer->occupied==0);
+		// waiting for the producer thread 
 		if (pthread_join(producer,NULL)) {
 			printf("error joining producer thread."); abort();
 		}
+		// checking if the message in the buffer is the one put by the producer thread
+		CU_ASSERT_STRING_EQUAL(buffer->messages[0]->content, "How are you?");
+		// checking if the buffer is full
 		CU_ASSERT_TRUE(buffer->occupied==1);
 	}
 
 
-
+	// function for a single producer that needs to put i messages
+	// in the buffer, 5 for the test
 	void* producer(void *arg) {
 		int i = 0;
+		// id of the thread
 		pthread_t thread_id;
 		thread_id = pthread_self();
+		// printing the id of the producer
 		printf("\nThread Producer %d\n",(int)thread_id);
 		const char* string = "Hi";
+		// casting the buffer passed as parameter
 		buffer_t **buffer = (buffer_t**)arg;
 		buffer_t* b = *buffer;
+		// creating the message
 		msg_t *msg = msg_init_string((void*)string);
-		msg_t* test;		
+		msg_t* test;
+		// putting 5 messages in the buffer		
 		while (i<5) {
 			test = put_bloccante(*buffer, msg);
 			i++;
 		}
+		//ending the thread
 		pthread_exit(0);
 		
 	}
 
-
+	// function for the test of multiple producers
 	void* multiple_producers(void *arg) {
 		int i = 1;
+		// id of the thread
 		pthread_t thread_id;
 		thread_id = pthread_self();
+		// printing the id of the producer
 		printf("\nThread Producer %d\n",(int)thread_id);
 		const char* string = "Hi";
+		// casting the buffer passed as parameter
 		buffer_t **buffer = (buffer_t**)arg;
 		buffer_t* b = *buffer;
+		// creating the message
 		msg_t *msg = msg_init_string((void*)string);
-		msg_t* test;		
+		msg_t* test;
+		// putting concurrently the messages in the buffer		
 		while (i<=b->size/2) {
 			test = put_bloccante(*buffer, msg);
-			//printf("Message put by Thread Producer %d\n",(int)thread_id);
 			i++;
 		}
+		// ending the thread
 		pthread_exit(0);
 		
 	}
 
+	// function for a single consumer 
 	void* consumer(void* arg) {
 		int i = 0;
 		pthread_t thread_id = pthread_self();
+		// casting the buffer passed as parameter
 		buffer_t **buffer = (buffer_t**)arg;
 		buffer_t* b = *buffer;
 		msg_t* msg;
+		// retrieving 5 messages from the buffer
 		while (i<5) {
 			msg = get_bloccante(*buffer);
-			if (msg!= NULL)
-				printf("\nMessage taken by Thread %d\n",(int)thread_id);
 			i += 1;
 		}
+		//ending the thread
 		pthread_exit(0);
 	}
-
+	// function called by multiple consumers that
+	// retrieve messages from the buffer concurrently
 	void* multiple_consumers(void* arg) {
+		// id of the thread 
 		pthread_t thread_id = pthread_self();
+		// casting the buffer passed as parameter
 		buffer_t **buffer = (buffer_t**)arg;
 		buffer_t* b = *buffer;
 		msg_t* msg;
+		// getting the message from the buffer
 		msg = get_non_bloccante(*buffer);
 		if (msg!= NULL)
 			printf("\nMessage taken by Thread %d\n",(int)thread_id);
-	
+		//ending the thread
 		pthread_exit(0);
 	}
 
+
+	// function called by multiple consumers, 
 	void* multiple_consumers_blocking(void* arg) {
+		// id of the thread 
 		pthread_t thread_id = pthread_self();
+		// casting the buffer passed as parameter
 		buffer_t **buffer = (buffer_t**)arg;
 		buffer_t* b = *buffer;
 		msg_t* msg;
+		// getting the message from the buffer
 		msg = get_bloccante(*buffer);
 		if (msg!= NULL)
 			printf("\nMessage taken by Thread %d\n",(int)thread_id);
+		// ending the thread
 		pthread_exit(0);
 	}
 	
@@ -376,7 +411,6 @@
 
 
 	int main() {
-		
 		CU_pSuite pSuite = NULL;
 		if (CUE_SUCCESS !=CU_initialize_registry())
       		return CU_get_error();
