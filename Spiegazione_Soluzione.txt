@@ -1,0 +1,14 @@
+La soluzione da me implementata prevede l'utilizzo di 3 mutex e due variabili condizioni.
+I mutex utilizzati fanno riferimento agli indici di inserimento ed estrazione dal buffer condiviso, in 
+modo da permettere l'utilizzo concorrentente della risorsa condivisa ad un produttore e ad un consumatore
+contemporaneamente, e all'indice che tiene conto del numero di celle occupate del buffer.
+Le variabili condizioni sono quelle classiche che indicano se il buffer è non pieno o non vuoto.
+I metodi di inserimento ed estrazione, quindi, per essere eseguiti necessitano della libertà del
+mutex dell' indice di estrazione/inserimento che viene bloccato ( o che si prova a bloccare) prima di
+eseguire ogni altra operazione sulla risorsa condivisa.
+Il mutex sul numero di celle occupate è stato inserito per evitare una interferenza nell'aggiornamento
+dell'indice stesso da parte di più thread concorrenti, evitando di conseguenza l'accesso a stati inconsinstenti.
+Le due variabili condizioni non piene e non vuote sono quelle utilizzate in maniera classica che segnalano
+ai thread in attesa le condizioni del buffer.
+
+

@@ -128,9 +128,6 @@
 		while (buffer->occupied == 0) {
 			pthread_cond_wait(&buffer->buffer_not_empty,&buffer->mutex_e_index);
 		}
-
-		//msg_t *msg = buffer->messages[buffer->e_index]->msg_copy(buffer->messages[buffer->e_index]);
-		//buffer->messages[buffer->e_index]->msg_destroy(buffer->messages[buffer->e_index]);
 		msg_t *msg = buffer->messages[buffer->e_index];
 		buffer->messages[buffer->e_index] = NULL; 	
 		buffer->e_index = increase_index_buffer(buffer->size, buffer->e_index);
@@ -151,8 +148,6 @@
 			pthread_mutex_unlock(&buffer->mutex_e_index);
 			return BUFFER_ERROR;
 		}
-		//msg_t *msg = buffer->messages[buffer->e_index]->msg_copy(buffer->messages[buffer->e_index]);
-		//buffer->messages[buffer->e_index]->msg_destroy(buffer->messages[buffer->e_index]);
 		msg_t *msg = buffer->messages[buffer->e_index];
 		buffer->messages[buffer->e_index] = NULL;
 		buffer->e_index = increase_index_buffer(buffer-> size, buffer->e_index);
