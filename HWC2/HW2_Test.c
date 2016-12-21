@@ -80,7 +80,6 @@
       printf("ACCEPTER THREAD: Accepter Created\n");
       parameters_t* accepter_parameters = *(parameters_t**)parameters;
       add_reader(accepter_parameters->accepter,accepter_parameters->buffer);
-      buffer_to_string(accepter_parameters->buffer);
       CU_ASSERT_TRUE(accepter_parameters->accepter->num_readers == accepter_parameters->buffer->size-1 );
       printf("ACCEPTER THREAD: Terminating Accepter\n");
       pthread_exit(0);
