@@ -1,0 +1,15 @@
+La soluzione da me implementata si basa sull'utilizzo di due strutture
+per la gestione dei dati che sono quella dell'accepter e del singolo reader.
+La struttura dell'accepter si occupa della gestione della lista dei semafori e 
+dei vari reader, quella dei reader invece gestisce le strutture dati necessarie 
+per il loro corretto funzionamento.
+Ho lasciato intenzionalmente un campo failure nei reader poichè potrebbe essere utile nel
+caso si volesse una diversa terminazione dei reader da parte del dispatcher ( per esempio la 
+terminazione del reader la terza volta che si prova a inviargli un messaggio senza successo).
+Per fare ciò però sarebbe un necessario un meccanismo per inviare i messaggi arretrati ai vari reader,
+fattore che aumenterebbe di molto la complessità del dispatcher.
+L'unico malfunzionamento da me notato è quello presente nella funzione pthread_get_name_np a cui non sono
+riuscito a rendere parametrica la stringa in cui viene salvato il nome del thread restituito dal metodo, optando quindi per una
+lunghezza fissa di 40 ( numeri minori non funzionavano e ritornavano null).
+Lo script compile.sh viene usato per la compilazione del progetto --> crea eseguibile di nome Test
+da lanciare con ./Test.
